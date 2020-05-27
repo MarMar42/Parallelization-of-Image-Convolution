@@ -1,0 +1,72 @@
+ :Edge 3x3:CPU:Run Time:227.593628 ms
+8:Edge 3x3:GPU(Global):Run Time:2.458931 ms
+8:Edge 3x3:GPU(Global Constant):Run Time:0.958877 ms
+8:Edge 3x3:GPU(Share) Tile Size = 10:Run Time:2.004787 ms
+8:Edge 3x3:GPU(Shared Constant) Tile Size = 10:Run Time:0.579584 ms
+8:Edge 3x3:GPU(Texture):Run Time:1.890816 ms
+ :Blur 3x3:CPU:Run Time:226.883179 ms
+8:Blur 3x3:GPU(Global):Run Time:2.460775 ms
+8:Blur 3x3:GPU(Global Constant):Run Time:0.962662 ms
+8:Blur 3x3:GPU(Share) Tile Size = 10:Run Time:1.999977 ms
+8:Blur 3x3:GPU(Shared Constant) Tile Size = 10:Run Time:0.580403 ms
+8:Blur 3x3:GPU(Texture):Run Time:1.903206 ms
+ :Blur 5x5:CPU:Run Time:584.276184 ms
+8:Blur 5x5:GPU(Global):Run Time:6.474748 ms
+8:Blur 5x5:GPU(Global Constant):Run Time:1.797325 ms
+8:Blur 5x5:GPU(Share) Tile Size = 12:Run Time:4.496691 ms
+8:Blur 5x5:GPU(Shared Constant) Tile Size = 12:Run Time:0.889754 ms
+8:Blur 5x5:GPU(Texture):Run Time:4.523620 ms
+ :Blur 7x7:CPU:Run Time:1100.611328 ms
+8:Blur 7x7:GPU(Global):Run Time:12.688589 ms
+8:Blur 7x7:GPU(Global Constant):Run Time:3.190272 ms
+8:Blur 7x7:GPU(Share) Tile Size = 14:Run Time:8.068505 ms
+8:Blur 7x7:GPU(Shared Constant) Tile Size = 14:Run Time:1.329046 ms
+8:Blur 7x7:GPU(Texture):Run Time:8.337919 ms
+ :Edge 3x3:CPU:Run Time:225.497711 ms
+16:Edge 3x3:GPU(Global):Run Time:2.090496 ms
+16:Edge 3x3:GPU(Global Constant):Run Time:0.972896 ms
+16:Edge 3x3:GPU(Share) Tile Size = 18:Run Time:1.806951 ms
+16:Edge 3x3:GPU(Shared Constant) Tile Size = 18:Run Time:0.584598 ms
+16:Edge 3x3:GPU(Texture):Run Time:1.841968 ms
+ :Blur 3x3:CPU:Run Time:227.951614 ms
+16:Blur 3x3:GPU(Global):Run Time:2.085785 ms
+16:Blur 3x3:GPU(Global Constant):Run Time:0.970342 ms
+16:Blur 3x3:GPU(Share) Tile Size = 18:Run Time:1.806131 ms
+16:Blur 3x3:GPU(Shared Constant) Tile Size = 18:Run Time:0.585110 ms
+16:Blur 3x3:GPU(Texture):Run Time:1.847402 ms
+ :Blur 5x5:CPU:Run Time:578.791382 ms
+16:Blur 5x5:GPU(Global):Run Time:5.566768 ms
+16:Blur 5x5:GPU(Global Constant):Run Time:1.306109 ms
+16:Blur 5x5:GPU(Share) Tile Size = 20:Run Time:4.461568 ms
+16:Blur 5x5:GPU(Shared Constant) Tile Size = 20:Run Time:0.959693 ms
+16:Blur 5x5:GPU(Texture):Run Time:4.628480 ms
+ :Blur 7x7:CPU:Run Time:1090.283813 ms
+16:Blur 7x7:GPU(Global):Run Time:11.079376 ms
+16:Blur 7x7:GPU(Global Constant):Run Time:2.599721 ms
+16:Blur 7x7:GPU(Share) Tile Size = 22:Run Time:7.747476 ms
+16:Blur 7x7:GPU(Shared Constant) Tile Size = 22:Run Time:1.303757 ms
+16:Blur 7x7:GPU(Texture):Run Time:8.045978 ms
+ :Edge 3x3:CPU:Run Time:229.637238 ms
+32:Edge 3x3:GPU(Global):Run Time:1.924506 ms
+32:Edge 3x3:GPU(Global Constant):Run Time:1.003318 ms
+32:Edge 3x3:GPU(Share) Tile Size = 34:Run Time:1.722368 ms
+32:Edge 3x3:GPU(Shared Constant) Tile Size = 34:Run Time:0.643686 ms
+32:Edge 3x3:GPU(Texture):Run Time:1.776336 ms
+ :Blur 3x3:CPU:Run Time:225.741302 ms
+32:Blur 3x3:GPU(Global):Run Time:1.926656 ms
+32:Blur 3x3:GPU(Global Constant):Run Time:1.003721 ms
+32:Blur 3x3:GPU(Share) Tile Size = 34:Run Time:1.722368 ms
+32:Blur 3x3:GPU(Shared Constant) Tile Size = 34:Run Time:0.644813 ms
+32:Blur 3x3:GPU(Texture):Run Time:1.774592 ms
+ :Blur 5x5:CPU:Run Time:574.954468 ms
+32:Blur 5x5:GPU(Global):Run Time:5.285376 ms
+32:Blur 5x5:GPU(Global Constant):Run Time:1.342566 ms
+32:Blur 5x5:GPU(Share) Tile Size = 36:Run Time:4.399616 ms
+32:Blur 5x5:GPU(Shared Constant) Tile Size = 36:Run Time:1.009968 ms
+32:Blur 5x5:GPU(Texture):Run Time:4.568371 ms
+ :Blur 7x7:CPU:Run Time:1091.225586 ms
+32:Blur 7x7:GPU(Global):Run Time:10.706226 ms
+32:Blur 7x7:GPU(Global Constant):Run Time:2.646838 ms
+32:Blur 7x7:GPU(Share) Tile Size = 38:Run Time:7.640780 ms
+32:Blur 7x7:GPU(Shared Constant) Tile Size = 38:Run Time:1.479373 ms
+32:Blur 7x7:GPU(Texture):Run Time:8.139363 ms

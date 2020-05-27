@@ -1,19 +1,21 @@
 #include <stdio.h>
 #include <cuda_runtime.h>
-#include "helper_functions.h"
-#include "helper_cuda.h" 
+#include <helper_functions.h>
+#include <helper_cuda.h>
+
 #define Iter 10 //Number of iterations
 
-#define N 3 //Size of the mask
+#define N 7 //Size of the mask
 
+#define str "harvard2160.pgm"
 
-#define tile_size 16
+#define tile_size 32
 
 #define block_size (tile_size + N -1)
 
 //Filters
 float identity[9] = {0,0,0,0,1,0,0,0,0};
-float edge[9] = {1,0,-1,0,0,0,-1,0,1};
+float edge[9] = {-1,0,1,-2,0,2,-1,0,1};
 float sharp[9] = {0,-1,0,-1,5,-1,0,-1,0};
 
 float blur9[9] = {(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9,(float) 1/9};
@@ -22,15 +24,18 @@ float blur25[25] = {(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 
                     1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 
                     1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25,(float) 1/25};
 
+float blur49[49] = {(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49, (float) 1/49, (float) 1/49, (float) 1/49,(float) 1/49,(float) 1/49,(float) 1/49};
 
-float* filter = blur9;
-const char* filter_s = "Blur 3x3";
+float* filter = blur49;
+char* filter_s = "Blur 7x7";
+
 
 //Constant Memory Allocation
 __constant__ float deviceFilter[N * N];
 
 // Texture reference for 2D float texture
 texture<float, 2, cudaReadModeElementType> tex;
+
 
 void printArray(float* arr, int width,int height)
 {
@@ -79,16 +84,16 @@ void Seq_convolution(float* src,float* Filter,int filter_dim, int width, int hei
 {
     float Sum;
     float val,fval;
-    for (int i = 0; i< height-padder;i++)
+    for (int i = padder; i< height-padder;i++)
     {
-        for (int j = 0; j<width-padder;j++)
+        for (int j = padder; j<width-padder;j++)
         {
             Sum = 0.0;
             for (int k = (-1*filter_dim/2); k<=filter_dim/2;k++)
             {
                 for (int l = (-1*filter_dim/2); l<=filter_dim/2;l++)
                 {
-                    val = src[(j-l) + (i-k)*width];
+                    val = src[(j+l) + (i+k)*width];
                     fval = Filter[(l+filter_dim/2) + (k+filter_dim/2)*filter_dim];
                     Sum += val*fval;
                 }
@@ -113,9 +118,9 @@ __global__ void naive_convolution(float* src, float* out, float* Filter, int wid
     {
         for (int j = 0; j < filter_dim;j++)
         {
-            if((row_start + i) >= 0 && (row_start + i) < width)
+            if((row_start + i) >= 0 && (row_start + i) < height)
             {
-                if ((col_start + j) >=0 && (col_start + j) < height)
+                if ((col_start + j) >=0 && (col_start + j) < width)
                 {
                     Sum += src[(row_start + i)*width + (col_start + j)]*Filter[i*filter_dim + j];
                 }
@@ -156,6 +161,7 @@ __global__ void gConst_convolution(float* src, float* out, const float *__restri
  
  }
 
+////Share memory Convolution
 __global__ void share_convolution(float* src, float* out, float* Filter,
                                    int width, int height,int padder, int filter_dim)
 {
@@ -208,9 +214,9 @@ __global__ void share_convolution(float* src, float* out, float* Filter,
     col_start = tx + padder;
  
     float Sum = 0.0;
-    for (int y = -1*filter_dim/2; y <= filter_dim/2; y++)
+    for (int y = -1*filter_dim/2; y < filter_dim/2 +1; y++)
     {
-        for (int x = -1*filter_dim/2; x <= filter_dim/2;x++)
+        for (int x = -1*filter_dim/2; x < filter_dim/2 +1;x++)
         {
             Sum += Filter[(y+padder)*filter_dim + (x + padder)]*s_array[y+row_start][x+col_start];
         }
@@ -221,7 +227,7 @@ __global__ void share_convolution(float* src, float* out, float* Filter,
 
 
 
-
+//Shared Constant Memory Convolution
 __global__ void sConst_convolution(float* src, float* out, float *__restrict__ kernel,int width, int height,int padder, int filter_dim)
 {
 
@@ -285,6 +291,7 @@ __shared__ float s_array[block_size][block_size];
     out[t_loc] = Sum;
 }
 
+
 // Texture Memory Convolution
 __global__ void tex_convolution( float* out, float* Filter, int width, int height,int filter_dim)
 {
@@ -293,12 +300,13 @@ __global__ void tex_convolution( float* out, float* Filter, int width, int heigh
  
     float Sum = 0;
  
-    for (int i = -1*filter_dim/2; i < (filter_dim/2) + 1 ;i++)
+    for (int i = -1*filter_dim/2; i < (filter_dim/2) +1;i++)
     {
-        for (int j = -1*filter_dim/2; j < (filter_dim/2) + 1;j++)
+        for (int j = -1*filter_dim/2; j < (filter_dim/2)+1;j++)
         {
-            Sum += Filter[(j + filter_dim/2)*(filter_dim/2) + (i + filter_dim/2)]*tex2D(tex, col + i, row + j );
+            Sum += Filter[(i + filter_dim/2)*(filter_dim) + (j + filter_dim/2)]*tex2D(tex, col + j, row + i );
         }
+         
     }
     out[row*width + col] = Sum;
  
@@ -308,11 +316,8 @@ int main()
 {
     float* image = NULL;
 	unsigned int width, height;
-    float* Filter = (float *) malloc(N*N*sizeof(float));
-    
-    Filter = blur9;
 
-	char *imageFilename = sdkFindFilePath("lena_bw.pgm", 0);
+	char *imageFilename = sdkFindFilePath(str, 0);
 
     if (imageFilename == NULL)
     {
@@ -337,7 +342,7 @@ int main()
     float* d_image;
     float* d_filter;
     float* d_output;
-	
+ 
 
     //Times
     float time = 0;
@@ -379,10 +384,10 @@ int main()
 	char outputFilename[1024];
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_seq.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
  
  
-    printf("CPU:Run Time:%f ms\n", seq_time/Iter);
+    printf(" :%s:CPU:Run Time:%f ms\n",filter_s, seq_time/Iter);
 ///////////////////////////////////////CUDA////////////////////////////////////////////////////////////
 
 
@@ -426,9 +431,9 @@ int main()
 
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_naive.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
     
-    printf("GPU(Global):Run Time:%f ms\n", naive_time/Iter);
+    printf("%d:%s:GPU(Global):Run Time:%f ms\n",tile_size,filter_s, naive_time/Iter);
 
 ///////////////////////////////////////////Global Constant///////////////////////////////////////////////////////////////////
     memset(output,0,pad_size);
@@ -437,7 +442,7 @@ int main()
 
     cudaMemcpy(d_image,padded_image, pad_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_output,output, pad_size, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(deviceFilter, Filter, N*N*sizeof(float));
+    cudaMemcpyToSymbol(deviceFilter, filter, N*N*sizeof(float));
     
         for (int i = 0; i < Iter; i++)
     {
@@ -459,9 +464,9 @@ int main()
 
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_gConst.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
 	
-    printf("GPU(Global Constant):Run Time:%f ms\n", gConst_time/Iter);
+    printf("%d:%s:GPU(Global Constant):Run Time:%f ms\n",tile_size, filter_s, gConst_time/Iter);
 
 ///////////////////////////////Shared/////////////////////////////////////////////////////
     memset(output,0,pad_size);
@@ -470,11 +475,8 @@ int main()
 
     cudaMemcpy(d_image,padded_image, pad_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_output,output, pad_size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_filter,Filter, N*N*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_filter,filter, N*N*sizeof(float), cudaMemcpyHostToDevice);
 
-
-    dim3 dimBlock1(tile_size, tile_size);
-    dim3 dimGrid1(ceil((float)width/tile_size), ceil((float)height/tile_size));
 
     for (int i = 0; i < Iter; i++)
     {
@@ -494,9 +496,9 @@ int main()
 
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_share.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
 
-    printf("GPU(Share) Tile Size = %d:Run Time:%f ms\n",block_size, share_time/Iter);
+    printf("%d:%s:GPU(Share) Tile Size = %d:Run Time:%f ms\n",tile_size,filter_s,block_size, share_time/Iter);
 
 
 
@@ -507,7 +509,7 @@ int main()
 
     cudaMemcpy(d_image,padded_image, pad_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_output,output, pad_size, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(deviceFilter, Filter, N*N*sizeof(float));
+    cudaMemcpyToSymbol(deviceFilter, filter, N*N*sizeof(float));
 
     for (int i = 0; i < Iter; i++)
     {
@@ -527,10 +529,10 @@ int main()
 
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_sConst.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
 
 
-    printf("GPU(Shared Constant) Tile Size = %d:Run Time:%f ms\n", block_size, sConst_time/Iter);
+    printf("%d:%s:GPU(Shared Constant) Tile Size = %d:Run Time:%f ms\n",tile_size,filter_s, block_size, sConst_time/Iter);
 
 
 ///////////////////////////////Texture Constant/////////////////////////////////////////////////////
@@ -554,7 +556,7 @@ int main()
 
     cudaMemcpy(d_image,padded_image, pad_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_output,output, pad_size, cudaMemcpyHostToDevice);
-    cudaMemcpyToSymbol(deviceFilter, Filter, N*N*sizeof(float));
+    cudaMemcpyToSymbol(deviceFilter, filter, N*N*sizeof(float));
 
     for (int i = 0; i < Iter; i++)
     {
@@ -574,10 +576,10 @@ int main()
 
     strcpy(outputFilename, imageFilename);
     strcpy(outputFilename + strlen(imageFilename) - 4, "_tex.pgm");
-    sdkSavePGM(outputFilename, output, width, height);
+    sdkSavePGM(outputFilename, output, padded_w, padded_h);
 	
 
-    printf("GPU(Texture):Run Time:%f ms\n", tex_time/Iter);
+    printf("%d:%s:GPU(Texture):Run Time:%f ms\n",tile_size,filter_s, tex_time/Iter);
 
 
 
